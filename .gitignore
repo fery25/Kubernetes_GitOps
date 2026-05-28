@@ -1,0 +1,7 @@
+interview-prep.md
+*.local.md
+.notes/
+.idea/
+.vscode/
+*.swp
+.DS_Store
