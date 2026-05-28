@@ -1,6 +1,6 @@
 # Kubernetes GitOps — ArgoCD App of Apps + Helm
 
-Tento repozitář ukazuje způsob nasazení přibližně 10 podobných HTTP aplikací do Kubernetes pomocí ArgoCD. Řešení pokrývá tři prostředí (dev/stage/prod) a je navrženo tak, aby přidání další aplikace znamenalo pouze jeden nový záznam v konfiguračním souboru. Architektura stojí na dvou pilířích: jednom sdíleném Helm chartu pro všechny aplikace a jednom řídicím Helm chartu implementujícím vzor **"App of Apps"**.
+Tento repozitář ukazuje způsob nasazení podobných HTTP aplikací (generic-app) do Kubernetes pomocí ArgoCD. Řešení pokrývá tři prostředí (dev/stage/prod) a je navrženo tak, aby přidání další aplikace znamenalo pouze jeden nový záznam v konfiguračním souboru. Architektura stojí na dvou pilířích: jednom sdíleném Helm chartu pro všechny aplikace a jednom řídicím Helm chartu implementujícím vzor **"App of Apps"**.
 
 ## Struktura repozitáře
 
@@ -35,7 +35,7 @@ kubectl apply -f bootstrap/root-app-dev.yaml
 argocd app list
 ```
 
-**Proč se kořenová aplikace aplikuje ručně?** Jde o klasický problém typu „co bylo dřív, vejce nebo slepice" (chicken-and-egg). ArgoCD synchronizuje pouze ty objekty, na které ukazují `Application` CRD již existující v clusteru. Aby ArgoCD vůbec věděl o existenci tohoto repozitáře, musí v něm být alespoň jedna `Application`, a tu tam musí zvenku „naseednout" někdo jiný. Vše ostatní si pak ArgoCD vytváří sám. V produkčním provozu by tento krok prováděla bootstrap pipeline po vytvoření clusteru — „ručně" tedy znamená jednou při zakládání clusteru, nikoliv při každém nasazení aplikace.
+**Proč se kořenová aplikace aplikuje ručně?** Jde o klasický problém typu „co bylo dřív, vejce nebo slepice". ArgoCD synchronizuje pouze ty objekty, na které ukazují `Application` CRD již existující v clusteru. Aby ArgoCD vůbec věděl o existenci tohoto repozitáře, musí v něm být alespoň jedna `Application`, a tu tam musí zvenku „naseednout" někdo jiný. Vše ostatní si pak ArgoCD vytváří sám. V produkčním provozu by tento krok prováděla bootstrap pipeline po vytvoření clusteru — „ručně" tedy znamená jednou při zakládání clusteru, nikoliv při každém nasazení aplikace.
 
 ## Jak přidat další aplikaci
 
@@ -65,7 +65,7 @@ Po odeslání změn (commit → push) provede ArgoCD automaticky synchronizaci a
 
 - **Žádné reálné aplikace ani obrazy kontejnerů** — použil jsem zástupné názvy (placeholdery jako `ghcr.io/example-org/...`).
 - **Žádná hesla uložená v Gitu** — citlivé údaje do verzovacího systému nepatří, v praxi by se řešily odděleně (např. přes External Secrets a Key Vault).
-- **Automatická oprava (`selfHeal: true`) je zapnutá i v produkci** — v reálném bankovním prostředí by nasazení do produkce podléhalo manuálnímu schválení.
+- **Automatická oprava (`selfHeal: true`) je zapnutá i v produkci** — v reálném prostředí by nasazení do produkce podléhalo manuálnímu schválení.
 - **Jeden cílový Kubernetes cluster** — pro ukázku se vše nasazuje do jednoho clusteru, v realitě by každé prostředí cílilo na svůj vlastní oddělený cluster.
 - **Bezpečnostní politiky na úrovni clusteru chybí** — v aplikaci je sice nastaveno základní zabezpečení podů (`securityContext`), ale globální politiky (např. Kyverno nebo NetworkPolicies) by měly patřit do odděleného repozitáře, který cluster zakládá.
 - **Chybí automatizované testování (CI)** — repozitář neobsahuje automatickou validaci Helm chartů ani kontrolu YAML souborů při vytvoření Pull Requestu.
