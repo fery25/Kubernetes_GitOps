@@ -48,7 +48,7 @@ podSecurityContext:
   seccompProfile:
     type: RuntimeDefault
 
-# Container-level security context - hardened for bank requirements
+# Container-level security context
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
