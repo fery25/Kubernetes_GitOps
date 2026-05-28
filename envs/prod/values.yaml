@@ -1,0 +1,67 @@
+# ------------------------------------------------------------------
+# PROD prostředí - 3 repliky pro HA, vyšší resource requesty,
+# povinné anotace pro compliance (criticality, owner).
+# Ukázka rozšiřitelnosti: stejný pattern jako dev, jen jiné hodnoty
+# + třetí aplikace cards-api navíc.
+# ------------------------------------------------------------------
+
+global:
+  environment: prod
+  namespace: apps-prod
+  domain: prod.example.cluster.local
+  repoURL: https://github.com/example-org/k8s-gitops.git
+  targetRevision: main
+  chartPath: charts/generic-app
+  argocdProject: default
+  # Anotace propsané do KAŽDÉHO Podu v prostředí - využije Prometheus,
+  # cost-allocation, compliance auditing apod.
+  podAnnotations:
+    company.bank/criticality: "tier-1"
+    company.bank/owner: "platform-team"
+    company.bank/data-classification: "confidential"
+
+applications:
+  - name: payments-api
+    replicas: 3
+    image:
+      repository: ghcr.io/example-org/payments-api
+      tag: "1.4.2"
+    ingress:
+      enabled: true
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+
+  - name: accounts-api
+    replicas: 3
+    image:
+      repository: ghcr.io/example-org/accounts-api
+      tag: "2.0.1"
+    ingress:
+      enabled: true
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi
+
+  - name: cards-api
+    replicas: 3
+    image:
+      repository: ghcr.io/example-org/cards-api
+      tag: "0.9.0"
+    ingress:
+      enabled: true
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 512Mi

@@ -1,0 +1,67 @@
+{{- $global := .Values.global -}}
+{{- range $app := .Values.applications }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $app.name }}-{{ $global.environment }}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ $global.argocdProject }}
+  source:
+    repoURL: {{ $global.repoURL }}
+    targetRevision: {{ $global.targetRevision }}
+    path: {{ $global.chartPath }}
+    helm:
+      releaseName: {{ $app.name }}
+      valuesObject:
+        nameOverride: {{ $app.name }}
+        replicas: {{ $app.replicas | default 1 }}
+        image:
+          repository: {{ $app.image.repository }}
+          tag: {{ $app.image.tag | quote }}
+        {{- with $app.containerPort }}
+        containerPort: {{ . }}
+        {{- end }}
+        {{- with $app.service }}
+        service:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- if $app.ingress }}
+        ingress:
+          enabled: {{ $app.ingress.enabled | default false }}
+          className: {{ $app.ingress.className | default "nginx" }}
+          host: {{ printf "%s.%s" $app.name $global.domain }}
+          path: {{ $app.ingress.path | default "/" }}
+          pathType: {{ $app.ingress.pathType | default "Prefix" }}
+        {{- end }}
+        {{- with $app.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.env }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- if or $global.podAnnotations $app.podAnnotations }}
+        podAnnotations:
+          {{- with $global.podAnnotations }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- with $app.podAnnotations }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        {{- end }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $global.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

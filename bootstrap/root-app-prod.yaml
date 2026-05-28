@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/example-org/k8s-gitops.git
+      targetRevision: main
+      path: argocd-apps
+      helm:
+        valueFiles:
+          - $values/envs/prod/values.yaml
+    - repoURL: https://github.com/example-org/k8s-gitops.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    # Pozor: v reálném produkčním nasazení by selfHeal/automated bylo
+    # typicky vypnuté nebo s manuální approval gate.
+    # Pro účely tohoto úkolu ponecháno zapnuté kvůli konzistenci s dev/stage.
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

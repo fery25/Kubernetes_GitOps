@@ -1,0 +1,25 @@
+# ------------------------------------------------------------------
+# Výchozí hodnoty pro App of Apps chart.
+# Reálné hodnoty se předávají z envs/<env>/values.yaml přes root Application.
+# Tento soubor slouží jen jako "schema" a fallback.
+# ------------------------------------------------------------------
+
+global:
+  # Repo, ze kterého ArgoCD táhne child charty (typicky stejné jako tento repo).
+  repoURL: https://github.com/example-org/k8s-gitops.git
+  targetRevision: main
+  # Path uvnitř repa, kde leží sdílený chart pro všechny aplikace.
+  chartPath: charts/generic-app
+  # ArgoCD project, do kterého se Application objekty zařadí.
+  argocdProject: default
+  # Suffix přidávaný do názvu Application (app-name + "-" + environment).
+  environment: dev
+  # Cílový namespace v target clusteru, kde aplikace poběží.
+  namespace: apps-dev
+  # Doména pro skládání ingress hostnames: <app>.<domain>
+  domain: dev.example.cluster.local
+  # Anotace přidávané ke každému Podu v daném prostředí (např. compliance tagy).
+  podAnnotations: {}
+
+# Seznam aplikací k nasazení. Přidání 11. aplikace = jeden nový záznam.
+applications: []

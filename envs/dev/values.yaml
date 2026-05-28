@@ -1,0 +1,30 @@
+# ------------------------------------------------------------------
+# DEV prostředí - rychlé iterace, minimální zdroje.
+# 2 aplikace, 1 replika každá, žádné speciální anotace.
+# ------------------------------------------------------------------
+
+global:
+  environment: dev
+  namespace: apps-dev
+  domain: dev.example.cluster.local
+  repoURL: https://github.com/example-org/k8s-gitops.git
+  targetRevision: main
+  chartPath: charts/generic-app
+  argocdProject: default
+
+applications:
+  - name: payments-api
+    replicas: 1
+    image:
+      repository: ghcr.io/example-org/payments-api
+      tag: "1.4.2"
+    ingress:
+      enabled: true
+
+  - name: accounts-api
+    replicas: 1
+    image:
+      repository: ghcr.io/example-org/accounts-api
+      tag: "2.0.1"
+    ingress:
+      enabled: true

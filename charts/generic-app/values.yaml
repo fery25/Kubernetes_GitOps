@@ -1,0 +1,54 @@
+# ------------------------------------------------------------------
+# Výchozí hodnoty pro generic-app chart.
+# Hodnoty se přepisují per-aplikace v argocd-apps/templates/applications.yaml
+# (přes helm.valuesObject), a per-prostředí v envs/<env>/values.yaml.
+# ------------------------------------------------------------------
+
+# Pokud je prázdné, použije se .Chart.Name. V App of Apps předáváme jméno aplikace.
+nameOverride: ""
+
+image:
+  repository: nginx
+  tag: "1.27"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+containerPort: 8080
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  path: /
+  pathType: Prefix
+  annotations: {}
+  tls: []
+
+podAnnotations: {}
+podLabels: {}
+
+# Pole env proměnných (ne tajemství – ty patří do External Secrets, viz README).
+env: []
+# - name: LOG_LEVEL
+#   value: info
+
+probes:
+  liveness:
+    path: /healthz
+    port: 8080
+  readiness:
+    path: /ready
+    port: 8080

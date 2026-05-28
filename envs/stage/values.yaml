@@ -1,0 +1,33 @@
+# ------------------------------------------------------------------
+# STAGE prostředí - zrcadlí prod, ale menší rozsah.
+# Slouží jako poslední brána před prod (UAT, load testy).
+# ------------------------------------------------------------------
+
+global:
+  environment: stage
+  namespace: apps-stage
+  domain: stage.example.cluster.local
+  repoURL: https://github.com/example-org/k8s-gitops.git
+  targetRevision: main
+  chartPath: charts/generic-app
+  argocdProject: default
+  podAnnotations:
+    company.bank/environment: "stage"
+    company.bank/owner: "platform-team"
+
+applications:
+  - name: payments-api
+    replicas: 2
+    image:
+      repository: ghcr.io/example-org/payments-api
+      tag: "1.4.2"
+    ingress:
+      enabled: true
+
+  - name: accounts-api
+    replicas: 2
+    image:
+      repository: ghcr.io/example-org/accounts-api
+      tag: "2.0.1"
+    ingress:
+      enabled: true
