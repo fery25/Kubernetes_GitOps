@@ -12,6 +12,8 @@ image:
   tag: "1.27"
   pullPolicy: IfNotPresent
 
+imagePullSecrets: []
+
 replicas: 1
 
 containerPort: 8080
@@ -37,18 +39,52 @@ ingress:
   annotations: {}
   tls: []
 
+# Pod-level security context - strictly non-root
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container-level security context - hardened for bank requirements
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  capabilities:
+    drop:
+      - ALL
+
 podAnnotations: {}
 podLabels: {}
 
-# Pole env proměnných (ne tajemství – ty patří do External Secrets, viz README).
+# Pole env proměnných (secret patří do External Secrets, viz README).
 env: []
 # - name: LOG_LEVEL
 #   value: info
 
 probes:
   liveness:
-    path: /healthz
-    port: 8080
+    enabled: true
+    spec:
+      httpGet:
+        path: /healthz
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 20
   readiness:
-    path: /ready
-    port: 8080
+    enabled: true
+    spec:
+      httpGet:
+        path: /ready
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

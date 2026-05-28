@@ -80,11 +80,22 @@ objekt pro každou aplikaci, a každý child Application renderuje sdílený
 │   └── templates/
 │       └── applications.yaml       # {{ range }} generující N × Application
 │
-└── envs/                           # Per-environment konfigurace
-    ├── dev/values.yaml             # 2 aplikace, 1 replika
-    ├── stage/values.yaml           # 2 aplikace, 2 repliky, env anotace
-    └── prod/values.yaml            # 3 aplikace, 3 repliky, compliance anotace
+├── envs/                           # Per-environment konfigurace
+│   ├── dev/values.yaml             # 2 aplikace, 1 replika
+│   ├── stage/values.yaml           # 2 aplikace, 2 repliky, env anotace
+│   └── prod/values.yaml            # 3 aplikace, 3 repliky, compliance anotace
+│
+└── ci/                             # Self-validation tohoto repa (Azure DevOps)
+    ├── gitops-ci.yaml              # Pipeline trigger na PR/main
+    └── templates/
+        ├── helm-lint.yaml          # helm lint obou chartů
+        └── security-scan.yaml      # kubeconform + Trivy config sken
 ```
+
+> **Pozor na pojmy:** `ci/` v tomto repu je **self-validation** (lint, schema,
+> Trivy konfig sken těchto Helm šablon). Není to ta CI z aplikačního repa,
+> kterou popisuju níže v sekci "Co chybí pro produkci" — ta dělá build image,
+> SonarQube, SCA scan a vytváří PR co bumpne tag v `envs/`. Obě jsou potřeba.
 
 ---
 
@@ -140,7 +151,7 @@ helm template payments-api charts/generic-app/ \
 
 ## Jak přidat 11. aplikaci
 
-To je důkaz, že princip funguje. Stačí jeden záznam:
+V tomto je hlavní síla tohoto přístupu. Pro novou aplikaci stačí přidat tento jeden záznam:
 
 ```yaml
 # envs/prod/values.yaml
@@ -179,7 +190,7 @@ parametricky (image, replicas, host). Přesně na to jsou values souboty.
 
 ### 2. Proč App of Apps a **ne** ApplicationSet
 
-Toto byla nejtěžší volba a zaslouží si vysvětlení.
+Zde jsem hodně zvažoval obě varianty, protože každá má své plusy. Nakonec jsem zvolil App of Apps z těchto důvodů:"
 
 **ApplicationSet** je modernější a má elegantní generátory (Git, List, Cluster).
 Pro jednoduché *cookie-cutter* scénáře (jedna aplikace × N clusterů) je lepší
@@ -227,8 +238,11 @@ Vědomě obsahuje následující zjednodušení:
 - **Žádné sekrety v Gitu** — vůbec. Sekrety nepatří do Gitu, viz sekce níže.
 - **`automated.selfHeal: true` i v produkci** — v reálu by produkční sync
   byl manuální nebo přes change-management gate.
-- **Žádné NetworkPolicies, PodSecurityStandards, ResourceQuotas** — patří
-  na úroveň namespace/clusteru, ne do `generic-app` chartu.
+- **Pod-level security context JE součástí chartu** (non-root UID, read-only
+  filesystem, `drop: [ALL]`, `seccompProfile: RuntimeDefault` jako default).
+  Chybí ale cluster-level admission policies (PodSecurityStandards, Kyverno,
+  Gatekeeper), NetworkPolicies a ResourceQuotas — ty patří na úroveň
+  namespace/clusteru, ne do aplikačního chartu.
 - **Žádné testy chartu** (`helm unittest`, `conftest`, `kubeconform`) — měly
   by být v CI, viz sekce níže.
 - **Single cluster destination** — `https://kubernetes.default.svc` všude.
@@ -260,7 +274,7 @@ Tento Git repo dělá **runtime** (co běží v K8s). Pod ním musí ležet:
   kubectl `--exec` auth.
 - **Sítě a firewall** — privátní cluster API, egress NAT, WAF před Ingress.
 
-Tohle by ležel v **samostatném Terraform repu** (např. `infra-terraform/`)
+Tuto vrstvu bych spravoval v odděleném Terraform repozitáři (např. `infra-terraform/`)
 s vlastním state backendem (Terraform Cloud / Azure Storage backend),
 review gate a deploy přes Atlantis / TF Cloud / GitHub Actions.
 

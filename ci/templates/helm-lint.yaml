@@ -1,0 +1,16 @@
+parameters:
+  - name: chartPath
+    type: string
+  - name: chartName
+    type: string
+
+steps:
+  - task: HelmInstaller@0
+    displayName: 'Instalace Helm'
+    inputs:
+      helmVersion: 'latest'
+
+  - script: |
+      echo "=== Lint Helm chartu: ${{ parameters.chartName }} ==="
+      helm lint ${{ parameters.chartPath }}
+    displayName: 'Helm lint ${{ parameters.chartName }}'

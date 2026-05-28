@@ -35,6 +35,18 @@ applications:
       limits:
         cpu: "1"
         memory: 512Mi
+    # Ukázka per-aplikačního overridu: pro tier-1 service v prod rozmístíme
+    # repliky na různé nody (HA při výpadku nodu). Ostatní aplikace dědí
+    # default (žádná affinity).
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: payments-api
+              topologyKey: kubernetes.io/hostname
 
   - name: accounts-api
     replicas: 3

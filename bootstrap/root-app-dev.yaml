@@ -3,9 +3,7 @@
 # ručně (kubectl apply -f) - vše ostatní pak ArgoCD vytváří samo.
 #
 # Multi-source pattern: chart leží v argocd-apps/, ale values přebírá
-# z envs/dev/values.yaml (oba ze stejného repa). To je modernější
-# alternativa k "../envs/dev/values.yaml", které ArgoCD blokuje
-# z bezpečnostních důvodů (--allow-oob-symlinks).
+# z envs/dev/values.yaml (oba ze stejného repa).
 # ------------------------------------------------------------------
 apiVersion: argoproj.io/v1alpha1
 kind: Application

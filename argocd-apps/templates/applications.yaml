@@ -36,6 +36,14 @@ spec:
           host: {{ printf "%s.%s" $app.name $global.domain }}
           path: {{ $app.ingress.path | default "/" }}
           pathType: {{ $app.ingress.pathType | default "Prefix" }}
+          {{- with $app.ingress.annotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $app.ingress.tls }}
+          tls:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- end }}
         {{- with $app.resources }}
         resources:
@@ -45,14 +53,43 @@ spec:
         env:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-        {{- if or $global.podAnnotations $app.podAnnotations }}
+        {{- with $app.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.podSecurityContext }}
+        podSecurityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.probes }}
+        probes:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.nodeSelector }}
+        nodeSelector:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.affinity }}
+        affinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $app.tolerations }}
+        tolerations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- $podAnnotations := merge (dict) ($app.podAnnotations | default (dict)) ($global.podAnnotations | default (dict)) }}
+        {{- if $podAnnotations }}
         podAnnotations:
-          {{- with $global.podAnnotations }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
-          {{- with $app.podAnnotations }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
+          {{- toYaml $podAnnotations | nindent 10 }}
+        {{- end }}
+        {{- $podLabels := merge (dict) ($app.podLabels | default (dict)) ($global.podLabels | default (dict)) }}
+        {{- if $podLabels }}
+        podLabels:
+          {{- toYaml $podLabels | nindent 10 }}
         {{- end }}
   destination:
     server: https://kubernetes.default.svc

@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------
 
 global:
-  # Repo, ze kterého ArgoCD táhne child charty (typicky stejné jako tento repo).
+  # Repo, ze kterého ArgoCD táhne child charty.
   repoURL: https://github.com/example-org/k8s-gitops.git
   targetRevision: main
   # Path uvnitř repa, kde leží sdílený chart pro všechny aplikace.
